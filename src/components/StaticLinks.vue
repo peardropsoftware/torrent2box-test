@@ -28,9 +28,3 @@
         // Empty
     }
 </script>
-
-<style lang="scss">
-  #static-links {
-    // Empty
-  }
-</style>

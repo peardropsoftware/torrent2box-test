@@ -25,7 +25,7 @@
         mounted(): void {
             // Links
             setTimeout(() => {
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 5; i++) {
                     this.dynamicLinks.push(Object.assign<LinkModel, LinkModel>(new LinkModel(), {
                         label: `dynamic-file-${i}`,
                         href: `https://localhost/dynamic-file-${i}.torrent`
@@ -35,7 +35,7 @@
 
             // Divs
             setTimeout(() => {
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 5; i++) {
                     this.dynamicDivs.push(Object.assign<DivModel, DivModel>(new DivModel(), {
                         label: `div-${i}`,
                         cssId: `div-${i}`
@@ -47,7 +47,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="css">
   #dynamic-links {
     list-style-type: none;
     margin: 0;

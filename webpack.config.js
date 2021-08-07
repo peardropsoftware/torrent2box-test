@@ -5,30 +5,11 @@ const VueLoaderPlugin = require("vue-loader/lib/plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 const {CleanWebpackPlugin} = require("clean-webpack-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
-// Hide some plugin stat messages
-class CleanUpStatsPlugin {
-    shouldPickStatChild(child) {
-        return !child.name.includes("mini-css-extract-plugin") &&
-            !child.name.includes("vue-loader") &&
-            !child.name.includes("html-webpack-plugin");
-    }
-
-    apply(compiler) {
-        compiler.hooks.done.tap("CleanUpStatsPlugin", (stats) => {
-            const children = stats.compilation.children;
-            if (Array.isArray(children)) {
-                stats.compilation.children = children
-                    .filter(child => this.shouldPickStatChild(child));
-            }
-        });
-    }
-}
-
 module.exports = {
+    mode: process.env.NODE_ENV,
     target: "web",
     entry: {
         app: "./src/main.ts"
@@ -37,7 +18,7 @@ module.exports = {
         path: path.resolve(__dirname, "build"),
         filename: "[name].js"
     },
-    devtool: process.env.NODE_ENV === "development" ? "eval-source-map" : undefined,
+    devtool: process.env.NODE_ENV === "development" ? "eval-cheap-module-source-map" : false,
     module: {
         rules: [
             {
@@ -48,19 +29,16 @@ module.exports = {
             {
                 // TypeScript
                 test: /\.ts$/,
-                use: [
-                    {
+                use: {
                         loader: "ts-loader",
                         options: {
                             appendTsSuffixTo: [/\.vue$/],
                             transpileOnly: true
                         }
                     }
-                ]
             },
             {
                 // HTML
-                // exclude index.html which is processed by HtmlWebpackPlugin
                 test: /\.html$/,
                 exclude: /index\.html$/,
                 use: "html-loader"
@@ -69,22 +47,18 @@ module.exports = {
                 // CSS
                 test: /\.css$/,
                 use: [
-                    "css-hot-loader",
-                    MiniCssExtractPlugin.loader,
-                    "css-loader"
-                ]
-            },
-            {
-                // SASS
-                test: /\.scss$/,
-                use: [
-                    {
-                        loader: MiniCssExtractPlugin.loader,
+                    MiniCssExtractPlugin.loader, {
+                        loader: "css-loader",
+                        options: {
+                            // Do not process urls that use a root path
+                            // These may be static resources that do not need
+                            // to be processed by Webpack (fonts/images etc)
+                            url: {
+                                filter: url => !url.startsWith("/")
+                            }
+                        }
                     },
-                    "css-loader",
-                    {
-                        loader: "sass-loader",
-                    }
+                    "postcss-loader"
                 ]
             }
         ]
@@ -93,29 +67,38 @@ module.exports = {
         new CleanWebpackPlugin(),
         new ForkTsCheckerWebpackPlugin({
             async: false,
-            vue: true,
-            eslint: process.env.NODE_ENV !== "development",
-            eslintOptions: {
-                configFile: path.resolve(process.cwd(), ".eslintrc.js")
+            typescript: {
+                extensions: {
+                    vue: true
+                },
+                mode: "readonly"
+            },
+            eslint: {
+                files: [
+                    "./src/**/*.{ts,vue}"
+                ],
+                options: {
+                    configFile: "./.eslintrc.js"
+                }
             }
         }),
         new VueLoaderPlugin(),
         new MiniCssExtractPlugin({
             filename: "[name].css"
         }),
-        new CleanUpStatsPlugin(),
-        new HtmlWebpackPlugin({
-            template: "index.html",
-            minify: false,
-            hash: true
+        new CopyWebpackPlugin({
+            patterns: [
+                "index.html",
+                "favicon.ico",
+            ]
         }),
-        new CopyWebpackPlugin({patterns: [
-            {from: "favicon.ico"}
-        ]}),
         new BundleAnalyzerPlugin({
             analyzerMode: process.env.NODE_ENV === "development" ? "disabled" : "static",
             openAnalyzer: false
-        })
+        }),
+        new Webpack.ProgressPlugin({
+            activeModules: true
+        }),
     ],
     optimization: {
         splitChunks: {
@@ -123,11 +106,7 @@ module.exports = {
                 commons: {
                     test: /[\\/]node_modules[\\/]/,
                     name: "vendor",
-                    chunks: "all"
-                },
-                styles: {
-                    name: "styles",
-                    test: /\.css$/,
+                    enforce: true,
                     chunks: "all"
                 }
             }
@@ -135,17 +114,18 @@ module.exports = {
     },
     resolve: {
         alias: {
-            "vue$": "vue/dist/vue.common.js"
+            "vue$": "vue/dist/vue.common.js",
         },
-        extensions: [".ts", ".js", ".vue"]
+        extensions: [".ts", ".js", ".vue"],
     },
+    // https://localhost/webpack-dev-server
     devServer: {
-        port: 4000,
-        historyApiFallback: {
-            verbose: false
-        },
+        // chrome://flags/#allow-insecure-localhost
+        https: true,
+        port: 5005,
+        inline: true, // This enables HMR but breaks IE11
         overlay: {
-            warnings: true,
+            warnings: false,
             errors: true
         }
     }

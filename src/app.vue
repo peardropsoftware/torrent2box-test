@@ -8,8 +8,8 @@
 <script lang="ts">
     import Vue from "vue";
     import Component from "vue-class-component";
-    import StaticLinks from "./components/static-links.vue";
-    import DynamicLinks from "./components/dynamic-links.vue";
+    import StaticLinks from "./components/StaticLinks.vue";
+    import DynamicLinks from "./components/DynamicLinks.vue";
 
     @Component({
         name: "app",
