@@ -1,4 +1,4 @@
 export class LinkModel {
-    label: string;
+    text: string;
     href: string;
 }

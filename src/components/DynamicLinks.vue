@@ -1,10 +1,10 @@
 <template>
   <ul id="dynamic-links">
     <li v-for="link of dynamicLinks">
-      <a :href="link.href">{{link.label}}</a>
+      <a :href="link.href">{{link.text}}</a>
     </li>
     <li v-for="div of dynamicDivs">
-      <div :id="div.cssId">{{div.label}}</div>
+      <div :id="div.cssId">{{div.text}}</div>
     </li>
   </ul>
 </template>
@@ -27,8 +27,8 @@
             setTimeout(() => {
                 for (let i = 0; i < 5; i++) {
                     this.dynamicLinks.push(Object.assign<LinkModel, LinkModel>(new LinkModel(), {
-                        label: `dynamic-file-${i}`,
-                        href: `https://localhost/dynamic-file-${i}.torrent`
+                        text: `dynamic-link-${i + 1}`,
+                        href: `https://localhost/dynamic-link-${i + 1}.torrent`
                     }));
                 }
             }, 5000);
@@ -37,8 +37,8 @@
             setTimeout(() => {
                 for (let i = 0; i < 5; i++) {
                     this.dynamicDivs.push(Object.assign<DivModel, DivModel>(new DivModel(), {
-                        label: `div-${i}`,
-                        cssId: `div-${i}`
+                        text: `dynamic-div-${i + 1}`,
+                        cssId: `dynamic-div-${i + 1}`
                     }));
                 }
             }, 10000);
